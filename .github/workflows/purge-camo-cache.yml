@@ -1,0 +1,24 @@
+name: Purge GitHub Camo Images
+
+"on":
+  workflow_dispatch:
+
+jobs:
+  purge-images:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Purge GitHub Camo Images
+        shell: bash
+        run: |
+          urls=$(curl -sLk https://github.com/${{github.repository_owner}}/${{ github.event.repository.name }}/tree/main | grep -Eo "(http|https)://camo.githubusercontent.com[a-zA-Z0-9./?=_%:-]*" || true)
+          if [ -n "$urls" ]; then
+            while IFS= read -r line; do
+              curl -X PURGE "$line"
+            done <<< "$urls"
+          else
+            echo "No images to purge."
+          fi
